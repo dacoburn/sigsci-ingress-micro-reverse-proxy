@@ -30,3 +30,20 @@ The two containers communicate over a Unix Socket file shared via Shared Persist
 7. Run: minikube service sigsci-nginx-example
 
 At this point you should now have a browser window pop up with a simple html page saying `The Body!`
+
+_Side Note: If you would like to set up a NFS Server you can follow the directions from https://vitux.com/install-nfs-server-and-client-on-ubuntu/ like I did in an Ubuntu VM_
+
+### NFS Server Steps
+
+1. Run: `sudo apt update`
+2. Run: `sudo apt install nfs-kernel-server`
+3. Run: `sudo mkdir -p /mnt/sharedfolder`
+4. Run: `sudo chown nobody:nogroup /mnt/sharedfolder`
+5. Run: `sudo chmod 777 /mnt/sharedfolder`
+6. Edit: `/etc/exports`
+    - Add: /mnt/sharedfolder XXX.XXX.XXX.XXX/24(rw,sync,no_subtree_check)
+7. Run: `sudo exportfs -a`
+8. Run: `sudo systemctl restart nfs-kernel-server`
+9. Run: `sudo ufw allow from XXX.XXX.XXX.XXX/24 to any port nfs`
+
+You can now use this NFS Server in the POD Volume Mount `server: NFS_SERVER_NAME`
