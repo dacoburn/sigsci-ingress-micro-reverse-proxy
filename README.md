@@ -10,7 +10,7 @@ The two containers communicate over a Unix Socket file shared via Shared Persist
 2. Download and install kubectl from https://kubernetes.io/docs/tasks/tools/install-kubectl/
 3. Run: `minikube start`
     - Note on Windows you will need to do something like `minikube start --vm-driver hyperv --hyperv-virtual-switch "Default Switch"` in order to work with Hyper-V
-4. Run: `minikube enable dashboard`
+4. Run: `minikube addons enable dashboard`
 5. Run: `kubectl -f sigsci-nginx-example_deployment.yaml`
     - Please note you will need to update the following in the yaml:
         + The images (`image:trickyhu/sigsci-debian-nginx:latest`, `image:trickyhu/sigsci-agent-alpine:latest`) with your own unless you want to test with mine.
