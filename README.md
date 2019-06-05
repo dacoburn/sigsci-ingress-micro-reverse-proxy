@@ -26,8 +26,8 @@ The two containers communicate over a Unix Socket file shared via Shared Persist
               path: /mnt/sharedfolder
               server: NFS_SERVER_NAME
         ````
-6. Run: kubectl expose deployment sigsci-nginx-example --type=NodePort
-7. Run: minikube service sigsci-nginx-example
+6. Run: `kubectl expose deployment sigsci-nginx-example --type=NodePort`
+7. Run: `minikube service sigsci-nginx-example`
 
 At this point you should now have a browser window pop up with a simple html page saying `The Body!`
 
