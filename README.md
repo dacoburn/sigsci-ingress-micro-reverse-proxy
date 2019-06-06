@@ -5,6 +5,7 @@ This example deployment method for Kubernetes is using NGINX with the Signal Sci
 The two containers communicate over a Unix Socket file shared via Shared Persistent Volume. In my example I will use minikube with a NFS Server as the Persistent Volume type.
 
 ## Setting up the Environment
+**Note:** Directions for building the ingress container can be found at https://github.com/aaron-sigsci/sigsci-nginx-ingress-native
 
 1. Download and install minikube from https://kubernetes.io/docs/tasks/tools/install-minikube/
 2. Download and install kubectl from https://kubernetes.io/docs/tasks/tools/install-kubectl/
