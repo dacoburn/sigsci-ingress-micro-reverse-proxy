@@ -1,11 +1,18 @@
----
+kind: PersistentVolume
 apiVersion: v1
-kind: Namespace
 metadata:
-  name: ingress-nginx
+  name: pv001
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    type: local
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  reclaimPolicy:
+    - Recycle
+  hostPath:
+    path: "/kube"
 
 ---
 
@@ -17,8 +24,8 @@ metadata:
   name: nginx-configuration
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 
 ---
 kind: ConfigMap
@@ -27,8 +34,8 @@ metadata:
   name: tcp-services
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 
 ---
 kind: ConfigMap
@@ -37,8 +44,8 @@ metadata:
   name: udp-services
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 
 ---
 apiVersion: v1
@@ -47,8 +54,8 @@ metadata:
   name: nginx-ingress-serviceaccount
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -56,8 +63,8 @@ kind: ClusterRole
 metadata:
   name: nginx-ingress-clusterrole
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 rules:
   - apiGroups:
       - ""
@@ -113,8 +120,8 @@ metadata:
   name: nginx-ingress-role
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 rules:
   - apiGroups:
       - ""
@@ -158,8 +165,8 @@ metadata:
   name: nginx-ingress-role-nisa-binding
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -175,8 +182,8 @@ kind: ClusterRoleBinding
 metadata:
   name: nginx-ingress-clusterrole-nisa-binding
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -194,19 +201,19 @@ metadata:
   name: nginx-ingress-controller
   namespace: default
   labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/name: nginx-ingress-controller
+    app.kubernetes.io/part-of: nginx-ingress-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/part-of: ingress-nginx
+      app.kubernetes.io/name: nginx-ingress-controller
+      app.kubernetes.io/part-of: nginx-ingress-controller
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/name: nginx-ingress-controller
+        app.kubernetes.io/part-of: nginx-ingress-controller
       annotations:
         prometheus.io/port: "10254"
         prometheus.io/scrape: "true"
@@ -220,7 +227,7 @@ spec:
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
             - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
             - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
-            - --publish-service=$(POD_NAMESPACE)/ingress-nginx
+            - --publish-service=$(POD_NAMESPACE)/nginx-ingress-controller
             - --annotations-prefix=nginx.ingress.kubernetes.io
           securityContext:
             allowPrivilegeEscalation: true
@@ -279,9 +286,8 @@ spec:
               value: REPLACE_ME_INGRESS_SITE
       volumes:
         - name: sigsci-socket
-          nfs:
-            path: /mnt/sharedfolder
-            server: NFS_SERVER_ADDRESS
+          persistentVolumeClaim:
+          claimName: ingress
 
 ---
 
@@ -295,7 +301,7 @@ metadata:
   labels:
     k8s-app: microservice-a
   name: microservice-a
-  selfLink: /apis/extensions/v1beta1/namespaces/ingress-nginx/deployments/microservice-a
+  selfLink: /apis/extensions/v1beta1/namespaces/nginx-ingress-controller/deployments/microservice-a
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -329,7 +335,7 @@ spec:
           protocol: TCP
         resources: {}
         securityContext:
-          privileged: true
+          privileged: false
           procMount: Default
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
@@ -342,15 +348,15 @@ spec:
         - name: SIGSCI_HOSTNAME
           value: micro-a
         - name: SIGSCI_SECRETACCESSKEY
-          value: REPLACE_ME_MICROSERVICE_SITE
+          value: REPLACE_ME_MICROA_SITE
         - name: SIGSCI_ACCESSKEYID
-          value: REPLACE_ME_MICROSERVICE_SITE
+          value: REPLACE_ME_MICROA_SITE
         image: trickyhu/sigsci-agent-alpine:latest
         imagePullPolicy: Always
         name: sigsci-agent-alpine
         resources: {}
         securityContext:
-          privileged: true
+          privileged: false
           procMount: Default
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
@@ -364,10 +370,8 @@ spec:
       terminationGracePeriodSeconds: 30
       volumes:
       - name: host-mount
-        nfs:
-          path: /mnt/sharedfolder
-          server: NFS_SERVER_ADDRESS
-status: {}
+        persistentVolumeClaim:
+        claimName: microservice-a
 
 ---
 
@@ -381,7 +385,7 @@ metadata:
   labels:
     k8s-app: microservice-b
   name: microservice-b
-  selfLink: /apis/extensions/v1beta1/namespaces/ingress-nginx/deployments/microservice-b
+  selfLink: /apis/extensions/v1beta1/namespaces/nginx-ingress-controller/deployments/microservice-b
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -404,18 +408,18 @@ spec:
       containers:
       - env:
         - name: sigsci_rpc
-          value: \/var\/run\/sigsci\/apache.sock
-        - name: SIGSCI_NGINX_PORT
+          value: \/var\/run\/sigsci\/micro-b.sock
+        - name: apache_port
           value: "8282"
         image: trickyhu/sigsci-apache-alpine:latest
         imagePullPolicy: Always
         name: microservice-b
         ports:
-        - containerPort: 8989
+        - containerPort: 8282
           protocol: TCP
         resources: {}
         securityContext:
-          privileged: true
+          privileged: false
           procMount: Default
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
@@ -428,15 +432,15 @@ spec:
         - name: SIGSCI_HOSTNAME
           value: micro-b
         - name: SIGSCI_SECRETACCESSKEY
-          value: REPLACE_ME_MICROSERVICE_SITE
+          value: REPLACE_ME_MICROB_SITE
         - name: SIGSCI_ACCESSKEYID
-          value: REPLACE_ME_MICROSERVICE_SITE
+          value: REPLACE_ME_MICROB_SITE
         image: trickyhu/sigsci-agent-alpine:latest
         imagePullPolicy: Always
         name: sigsci-agent-alpine
         resources: {}
         securityContext:
-          privileged: true
+          privileged: false
           procMount: Default
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
@@ -450,11 +454,8 @@ spec:
       terminationGracePeriodSeconds: 30
       volumes:
       - name: host-mount
-        nfs:
-          path: /mnt/sharedfolder
-          server: NFS_SERVER_ADDRESS
-status: {}
-
+        persistentVolumeClaim:
+        claimName: microservice-b
 
 ---
 
@@ -477,7 +478,7 @@ spec:
         - path: /apache(/|$)(.*)
           backend:
             serviceName: microservice-b
-            servicePort: 8989
+            servicePort: 8282
 ---
 
 apiVersion: extensions/v1beta1
@@ -490,7 +491,7 @@ metadata:
   labels:
     k8s-app: reverse-proxy
   name: reverse-proxy
-  selfLink: /apis/extensions/v1beta1/namespaces/ingress-nginx/deployments/reverse-proxy
+  selfLink: /apis/extensions/v1beta1/namespaces/nginx-ingress-controller/deployments/reverse-proxy
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -536,4 +537,3 @@ spec:
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
-status: {}
