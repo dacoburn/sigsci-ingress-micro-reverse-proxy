@@ -1,6 +1,8 @@
 # Signal Sciences Kubernetes Sidecar Example
 
-This example deployment will showcase using the Signal Sciences agent as a sidecar to an Ingress of Microservice container. In addition there will be a Pod with just the Signal Sciences acting in Reverse Proxy mode. For the the sidecar configuration the two containers communicate over a Unix Socket file shared via Shared Persistent Volume. In my example I will use minikube with a host folder within the minikube VM for the Persistent Volume.
+This example deployment method for Kubernetes is using NGINX with the Signal Sciences Native Module and a sidecar container with the Signal Sciences Agent. The configuration shown can be used for any other type of agent/module pair and gives a simple example of how to set things up.
+
+The two containers communicate over a Unix Socket file shared via Shared Persistent Volume. In my example I will use minikube with a host folder within the minikube VM for the Persistent Volume.
 
 ## Setting up the Environment
 **Note:** Directions for building the ingress container can be found at https://github.com/aaron-sigsci/sigsci-nginx-ingress-native
